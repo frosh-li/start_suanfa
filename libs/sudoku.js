@@ -1,16 +1,20 @@
+
 /**
- * 数独算法测试
+ * 数独算法
  */
 
 class Sudoku {
 
-	constructor({display = false, sudokuMap = []}) {
+    constructor({
+        display = false,
+        sudokuMap = []
+    }) {
 
         // 是否展示算法过程
         this.display = display;
 
         // 原始数独数组
-		this.sudokuMap = sudokuMap;
+        this.sudokuMap = sudokuMap;
 
         // 回溯数组
         this.stacks = [];
@@ -24,38 +28,38 @@ class Sudoku {
             y: 0,
             value: 1,
         };
-	}
+    }
 
     /**
      * 如果某一个方格填写的测试数据能够经过校验
      * 就寻找到一下个需要填写数的方格
      * 这个方格的不能已经填写过数字
      * 找到这个方格的坐标返回
-    */
+     */
     getNextPoint() {
         let currentStack = this.stacks[this.stacks.length - 1];
         let found = false; // 是否已经找到初始点
         let ret = {
-            x:-1,
-            y:-1,
+            x: -1,
+            y: -1,
             value: 1,
         }
-        for(let i = 0 ; i < 9 ; i++) {
-            if(found) {
+        for (let i = 0; i < 9; i++) {
+            if (found) {
                 break;
             }
-			for(let j = 0 ; j < 9 ; j++) {
+            for (let j = 0; j < 9; j++) {
                 let node = this.sudokuMap[i][j];
-                if(node === 0 && found === false) {
+                if (node === 0 && found === false) {
                     ret.x = i;
                     ret.y = j;
                     ret.value = 1;
-                    found=true;
+                    found = true;
                     break;
                 }
             }
         }
-        if(ret.x === -1 && ret.y === -1) {
+        if (ret.x === -1 && ret.y === -1) {
             this.resolved = true;
         }
         return ret;
@@ -76,16 +80,16 @@ class Sudoku {
 
         let found = false;
 
-        for(let i = 0 ; i < 9 ; i++) {
-            if(found) {
+        for (let i = 0; i < 9; i++) {
+            if (found) {
                 break;
             }
-			for(let j = 0 ; j < 9 ; j++) {
+            for (let j = 0; j < 9; j++) {
                 let node = this.sudokuMap[i][j];
-                if(node === 0 && found === false && !(ret.x === 0 && ret.y===0)) {
-                    ret.x = i ;
+                if (node === 0 && found === false && !(ret.x === 0 && ret.y === 0)) {
+                    ret.x = i;
                     ret.y = j;
-                    found=true;
+                    found = true;
                     break;
                 }
             }
@@ -98,26 +102,29 @@ class Sudoku {
      * 程序入口
      * 开始执行
      */
-	start() {
+    start() {
 
         // 清空命令行
-        process.stdout.cursorTo(0,0);
+        process.stdout.cursorTo(0, 0);
         process.stdout.clearScreenDown();
 
-        let {resolved: resolved, stacks: stacks} = this;
+        let {
+            resolved: resolved,
+            stacks: stacks
+        } = this;
 
-        while(resolved === false){
+        while (resolved === false) {
 
             // 如果记录填写数字的历史表为空，直接找第一个可以填写的方格填入
-            if(stacks.length === 0) {
+            if (stacks.length === 0) {
                 stacks.push(this.getFirstPoint())
             }
 
             let cStack = stacks[stacks.length - 1];
 
-            process.stdout.cursorTo(0,0);
+            process.stdout.cursorTo(0, 0);
 
-            if(this.display) {
+            if (this.display) {
                 console.log(this.sudokuMap);
             }
 
@@ -126,14 +133,14 @@ class Sudoku {
              * 如果获取不到需要填写的方格
              * 说明已经全部填写完成
              */
-            if(cStack.x === -1 && cStack.y === -1) {
+            if (cStack.x === -1 && cStack.y === -1) {
                 resolved = true;
                 return this;
             }
 
             let valid = this.testRules(cStack);
 
-            if(valid) {
+            if (valid) {
                 /**
                  * 填写的数字满足校验
                  * 先设置数独数组的值为当前测试的值
@@ -141,7 +148,7 @@ class Sudoku {
                  */
                 this.sudokuMap[cStack.x][cStack.y] = cStack.value;
                 stacks.push(this.getNextPoint());
-            }else{
+            } else {
                 /**
                  * 如果校验不通过
                  * 将当前方格的测试数据清空
@@ -156,7 +163,7 @@ class Sudoku {
                 this.rollback();
             }
         };
-	}
+    }
 
     /**
      * 回退
@@ -170,30 +177,33 @@ class Sudoku {
      */
     rollback() {
 
-        let {stacks, startPoint} = this;
+        let {
+            stacks, startPoint
+        } = this;
 
         let currentStack = stacks.pop();
 
         this.sudokuMap[currentStack.x][currentStack.y] = 0;
 
-        if(
-        currentStack.x === startPoint.x
-        && currentStack.y === startPoint.y
-        && currentStack.value < 9) {
+        if (
+            currentStack.x === startPoint.x
+            && currentStack.y === startPoint.y
+            && currentStack.value < 9
+        ) {
 
-            let nextValue = currentStack.value+1;
+            let nextValue = currentStack.value + 1;
             stacks.push({
                 x: 0,
                 y: 0,
                 value: nextValue
             });
 
-        }else{
+        } else {
 
-            if(currentStack.value < 9) {
+            if (currentStack.value < 9) {
                 currentStack.value++;
                 stacks.push(currentStack);
-            }else{
+            } else {
                 this.rollback();
             }
         }
@@ -206,75 +216,80 @@ class Sudoku {
      * 3、扫描当前格子所在的3X3的小格子中是否有重复数字
      */
     testRules(stack) {
-        let { x: x, y: y, value: val} = stack;
+        let {
+            x: x,
+            y: y,
+            value: val
+        } = stack;
         let ret = true;
         // 横向查找
-		for(let i = 0 ; i < 9 ; i++) {
-			if(i === x) {
-				continue;
-			}
-			let node = this.sudokuMap[i][y];
-            if(node === 0) {
+        for (let i = 0; i < 9; i++) {
+            if (i === x) {
                 continue;
             }
-			if(node === val) {
-				ret = false;
+            let node = this.sudokuMap[i][y];
+            if (node === 0) {
+                continue;
+            }
+            if (node === val) {
+                ret = false;
                 break;
-			}
-		}
+            }
+        }
 
-        if(ret === false) {
+        if (ret === false) {
             return ret;
         }
 
-		// 纵向查找
-		for(let i = 0 ; i < 9 ; i++) {
-			if(i === y) {
-				continue;
-			}
-			let node = this.sudokuMap[x][i];
-            if(node === 0) {
+        // 纵向查找
+        for (let i = 0; i < 9; i++) {
+            if (i === y) {
                 continue;
             }
-            if(node === val) {
-				ret = false;
+            let node = this.sudokuMap[x][i];
+            if (node === 0) {
+                continue;
+            }
+            if (node === val) {
+                ret = false;
                 break;
-			}
-		}
+            }
+        }
 
-        if(ret === false) {
+        if (ret === false) {
             return ret;
         }
 
         let found = false;
-		for(let i = 0 ; i < 9 ; i++) {
-            if(found) {
+        for (let i = 0; i < 9; i++) {
+            if (found) {
                 break;
             }
-			for(let j = 0 ; j < 9 ; j++) {
-				if(
-					i >= Math.floor(x/3)*3
-					&& i < (Math.floor(x/3)*3 + 3)
-					&& j >= Math.floor(y/3)*3
-					&& j < (Math.floor(y/3)*3 + 3)) {
+            for (let j = 0; j < 9; j++) {
+                if (
+                    i >= Math.floor(x / 3) * 3
+                    && i < (Math.floor(x / 3) * 3 + 3)
+                    && j >= Math.floor(y / 3) * 3
+                    && j < (Math.floor(y / 3) * 3 + 3)
+                ) {
 
-					if(i === x && j === y) {
-						continue;
-					}
-
-					let node = this.sudokuMap[i][j];
-                    if(node === 0) {
+                    if (i === x && j === y) {
                         continue;
                     }
-					// console.log(i,j, node);
-					if(node === val) {
+
+                    let node = this.sudokuMap[i][j];
+                    if (node === 0) {
+                        continue;
+                    }
+                    // console.log(i,j, node);
+                    if (node === val) {
                         found = true;
                         ret = false;
-						break;
-					}
-				}
-			}
-		}
+                        break;
+                    }
+                }
+            }
+        }
         return ret;
     }
 
