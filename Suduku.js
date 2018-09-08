@@ -4,7 +4,7 @@ const maps = require('./maps');
 let s = new Date();
 
 let sdk = new Sudoku({
-    display: false, // 是否打印过程，打印的速度慢很多
+    display: true, // 是否打印过程，打印的速度慢很多
     sudokuMap: maps.hard1,
 }).start();
 

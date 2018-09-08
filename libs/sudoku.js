@@ -28,6 +28,73 @@ class Sudoku {
             y: 0,
             value: 1,
         };
+
+        this.dataMap = new Map();
+
+        this.init();
+    }
+
+    /**
+     * 初始化确定每个可填写的格子可以的填入的数值，做成一个MAP
+     */
+    init() {
+        for(let i = 0 ; i < 9 ; i++ ) {
+            for(let j = 0 ; j < 9; j ++) {
+                let node = this.sudokuMap[i][j];
+                if(node === 0) {
+                    this.testMayFill(i, j);
+                }
+            }
+        }
+    }
+
+    /**
+     * 设置当前格子可能填入的值
+     */
+    testMayFill(x, y) {
+        let mayFillNumber = new Set([1,2,3,4,5,6,7,8,9]);
+
+        // 横向查找
+        for (let i = 0; i < 9; i++) {
+            if (i === x) {
+                continue;
+            }
+            let node = this.sudokuMap[i][y];
+            if (mayFillNumber.has(node)) {
+                mayFillNumber.delete(node);
+            }
+        }
+
+        // 纵向查找
+        for (let i = 0; i < 9; i++) {
+            if (i === y) {
+                continue;
+            }
+            let node = this.sudokuMap[x][i];
+
+            if (mayFillNumber.has(node)) {
+                mayFillNumber.delete(node);
+            }
+        }
+
+        // 3X3 方格查找
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                if (
+                    i >= Math.floor(x / 3) * 3
+                    && i < (Math.floor(x / 3) * 3 + 3)
+                    && j >= Math.floor(y / 3) * 3
+                    && j < (Math.floor(y / 3) * 3 + 3)
+                ) {
+                    let node = this.sudokuMap[i][j];
+                    if (mayFillNumber.has(node)) {
+                        mayFillNumber.delete(node);
+                    }
+                }
+            }
+        }
+
+        this.dataMap.set(`${x}-${y}`, [...mayFillNumber]);
     }
 
     /**
@@ -182,33 +249,35 @@ class Sudoku {
     rollback() {
 
         let {
-            stacks, startPoint
+            stacks, startPoint, dataMap
         } = this;
 
         let currentStack = stacks.pop();
 
         this.sudokuMap[currentStack.x][currentStack.y] = 0;
 
-        if (
+        let cSet = dataMap.get(`${currentStack.x}-${currentStack.y}`);
+
+        let cSetLen = cSet.length;
+        
+        if(
             currentStack.x === startPoint.x
             && currentStack.y === startPoint.y
-            && currentStack.value < 9
-        ) {
-
-            let nextValue = currentStack.value + 1;
+        ){
+            let nextIndex = cSet.indexOf(currentStack.value);
             stacks.push({
-                x: 0,
-                y: 0,
-                value: nextValue
-            });
-
+                x: currentStack.x,
+                y: currentStack.y,
+                value: cSet[nextIndex + 1],
+            })
         } else {
-
-            if (currentStack.value < 9) {
-                currentStack.value++;
-                stacks.push(currentStack);
-            } else {
+            let nextIndex = cSet.indexOf(currentStack.value);
+            if(nextIndex === cSetLen-1) {
+                // 到最后一个了
                 this.rollback();
+            }else{
+                currentStack.value = cSet[nextIndex+1];
+                stacks.push(currentStack);
             }
         }
     }
