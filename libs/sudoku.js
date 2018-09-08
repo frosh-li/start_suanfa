@@ -176,9 +176,6 @@ class Sudoku {
     start() {
 
         // 清空命令行
-        process.stdout.cursorTo(0, 0);
-        process.stdout.clearScreenDown();
-
         let {
             resolved: resolved,
             stacks: stacks
@@ -192,8 +189,6 @@ class Sudoku {
             }
 
             let cStack = stacks[stacks.length - 1];
-
-            process.stdout.cursorTo(0, 0);
 
             if (this.display) {
                 console.log(this.sudokuMap);
@@ -259,7 +254,7 @@ class Sudoku {
         let cSet = dataMap.get(`${currentStack.x}-${currentStack.y}`);
 
         let cSetLen = cSet.length;
-        
+
         if(
             currentStack.x === startPoint.x
             && currentStack.y === startPoint.y
