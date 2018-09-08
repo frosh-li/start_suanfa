@@ -78,6 +78,10 @@ class Sudoku {
             value: 1,
         };
 
+        if(this.sudokuMap[0][0] === 0) {
+            return ret;
+        }
+
         let found = false;
 
         for (let i = 0; i < 9; i++) {
@@ -86,7 +90,7 @@ class Sudoku {
             }
             for (let j = 0; j < 9; j++) {
                 let node = this.sudokuMap[i][j];
-                if (node === 0 && found === false && !(ret.x === 0 && ret.y === 0)) {
+                if (node === 0 && found === false) {
                     ret.x = i;
                     ret.y = j;
                     found = true;
@@ -117,7 +121,7 @@ class Sudoku {
 
             // 如果记录填写数字的历史表为空，直接找第一个可以填写的方格填入
             if (stacks.length === 0) {
-                stacks.push(this.getFirstPoint())
+                stacks.push(this.getFirstPoint());
             }
 
             let cStack = stacks[stacks.length - 1];
