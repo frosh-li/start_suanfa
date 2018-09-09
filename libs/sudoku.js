@@ -22,30 +22,50 @@ class Sudoku {
         // 是否已经解答完成
         this.resolved = false;
 
-        // 第一个可以填写的空白格
-        this.startPoint = {
-            x: 0,
-            y: 0,
-            value: 1,
-        };
 
         this.dataMap = new Map();
 
         this.init();
+
     }
 
     /**
      * 初始化确定每个可填写的格子可以的填入的数值，做成一个MAP
      */
     init() {
+        let exsitTimes = {};
         for(let i = 0 ; i < 9 ; i++ ) {
             for(let j = 0 ; j < 9; j ++) {
                 let node = this.sudokuMap[i][j];
                 if(node === 0) {
                     this.testMayFill(i, j);
+                }else{
+                    // 记录每个数字出现的次数
+                    exsitTimes[node] ? exsitTimes[node]++ : exsitTimes[node]=1;
                 }
             }
         }
+
+        // 进行一次可填入数字的排序
+        // 回溯的时候找下一个节点的时候从小到大进行搜索
+
+        let data = [];
+        for(let [key, value] of this.dataMap) {
+            data.push({
+                x: parseInt(key.split('-')[0]),
+                y: parseInt(key.split('-')[1]),
+                value: value.sort((a, b) => {
+                    exsitTimes[a] - exsitTimes[b] > 0 ? 1:-1;
+                })
+            })
+        }
+        // 
+        // data.sort(function(a , b) {
+        //     return a.value.length >= b.value.length ? 1 : -1;
+        // })
+
+        this.orders = data;
+
     }
 
     /**
@@ -105,30 +125,36 @@ class Sudoku {
      */
     getNextPoint() {
         let currentStack = this.stacks[this.stacks.length - 1];
-        let found = false; // 是否已经找到初始点
         let ret = {
             x: -1,
             y: -1,
             value: 1,
         }
-        for (let i = 0; i < 9; i++) {
-            if (found) {
-                break;
-            }
-            for (let j = 0; j < 9; j++) {
-                let node = this.sudokuMap[i][j];
-                if (node === 0 && found === false) {
-                    ret.x = i;
-                    ret.y = j;
-                    ret.value = 1;
-                    found = true;
+        for(let i = 0, len=this.orders.length ; i < len ; i++) {
+            let cvalue = this.orders[i];
+
+            if(cvalue.x === currentStack.x
+                && cvalue.y === currentStack.y
+            ) {
+                let nextValue = this.orders[i+1];
+                if(!nextValue) {
+                    this.resolved = true;
+                    return ret;
                     break;
                 }
+                ret.x = nextValue.x;
+                ret.y = nextValue.y;
+                ret.value = nextValue.value[0];
+                break;
             }
         }
+
         if (ret.x === -1 && ret.y === -1) {
             this.resolved = true;
+            process.exit();
+
         }
+        // console.log('next value', ret);
         return ret;
     }
 
@@ -138,34 +164,11 @@ class Sudoku {
      * 0 0 坐标节点上面可能已经填写了数字
      */
     getFirstPoint() {
-
         let ret = {
-            x: 0,
-            y: 0,
-            value: 1,
-        };
-
-        if(this.sudokuMap[0][0] === 0) {
-            return ret;
+            x: this.orders[0].x,
+            y: this.orders[0].y,
+            value: this.orders[0].value[0],
         }
-
-        let found = false;
-
-        for (let i = 0; i < 9; i++) {
-            if (found) {
-                break;
-            }
-            for (let j = 0; j < 9; j++) {
-                let node = this.sudokuMap[i][j];
-                if (node === 0 && found === false) {
-                    ret.x = i;
-                    ret.y = j;
-                    found = true;
-                    break;
-                }
-            }
-        }
-        this.startPoint = ret;
         return ret;
     }
 
@@ -174,14 +177,21 @@ class Sudoku {
      * 开始执行
      */
     start() {
+        let s = new Date();
 
         // 清空命令行
         let {
             resolved: resolved,
             stacks: stacks
         } = this;
+        if(this.display) {
+            process.stdout.cursorTo(0, 0);
+            process.stdout.clearScreenDown();
+        }
 
         while (resolved === false) {
+        //setInterval(() => {
+
 
             // 如果记录填写数字的历史表为空，直接找第一个可以填写的方格填入
             if (stacks.length === 0) {
@@ -191,7 +201,10 @@ class Sudoku {
             let cStack = stacks[stacks.length - 1];
 
             if (this.display) {
+                process.stdout.cursorTo(0,0);
                 console.log(this.sudokuMap);
+                console.log('已经填入数量',stacks.length);
+                console.log(`当前耗时${new Date()-s}ms`);
             }
 
             /**
@@ -201,6 +214,10 @@ class Sudoku {
              */
             if (cStack.x === -1 && cStack.y === -1) {
                 resolved = true;
+                // console.log(this.sudokuMap);
+                console.log(this.sudokuMap);
+                console.log('已经填入数量',stacks.length);
+                console.log(`当前耗时${new Date()-s}ms`);
                 return this;
             }
 
@@ -214,6 +231,8 @@ class Sudoku {
                  */
                 this.sudokuMap[cStack.x][cStack.y] = cStack.value;
                 stacks.push(this.getNextPoint());
+
+
             } else {
                 /**
                  * 如果校验不通过
@@ -225,9 +244,12 @@ class Sudoku {
                  * 回溯到上一级
                  *
                  */
-                this.sudokuMap[cStack.x][cStack.y] = 0;
+                //this.sudokuMap[cStack.x][cStack.y] = 0;
+                // console.log(stacks);
+
                 this.rollback();
             }
+        // }, 1000)
         };
     }
 
@@ -244,36 +266,40 @@ class Sudoku {
     rollback() {
 
         let {
-            stacks, startPoint, dataMap
+            stacks, dataMap
         } = this;
 
         let currentStack = stacks.pop();
+        // let currentStack = stacks[stacks.length - 1];
+
 
         this.sudokuMap[currentStack.x][currentStack.y] = 0;
+        let needRollbackDirect = false;
+        for(let i = 0,len=this.orders.length ; i < len ; i++) {
+            let cOrder = this.orders[i];
+            if(cOrder.x === currentStack.x && cOrder.y === currentStack.y) {
+                let orderIndex = cOrder.value.indexOf(currentStack.value);
+                if(orderIndex < 0) {
+                    console.log('查找完成');
+                    process.exit();
+                }
+                let cValue = cOrder.value[orderIndex+1];
+                if(orderIndex === cOrder.value.length-1) {
+                    needRollbackDirect = true;
+                    break;
+                }else{
 
-        let cSet = dataMap.get(`${currentStack.x}-${currentStack.y}`);
-
-        let cSetLen = cSet.length;
-
-        if(
-            currentStack.x === startPoint.x
-            && currentStack.y === startPoint.y
-        ){
-            let nextIndex = cSet.indexOf(currentStack.value);
-            stacks.push({
-                x: currentStack.x,
-                y: currentStack.y,
-                value: cSet[nextIndex + 1],
-            })
-        } else {
-            let nextIndex = cSet.indexOf(currentStack.value);
-            if(nextIndex === cSetLen-1) {
-                // 到最后一个了
-                this.rollback();
-            }else{
-                currentStack.value = cSet[nextIndex+1];
-                stacks.push(currentStack);
+                    stacks.push({
+                        x: currentStack.x,
+                        y: currentStack.y,
+                        value: cValue,
+                    });
+                }
+                break;
             }
+        }
+        if(needRollbackDirect) {
+            this.rollback()
         }
     }
 
