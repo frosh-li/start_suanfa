@@ -25,15 +25,14 @@ class Sudoku {
 
         this.dataMap = new Map();
 
-        this.updateOrders();
+        this.init();
 
     }
 
     /**
      * 初始化确定每个可填写的格子可以的填入的数值，做成一个MAP
      */
-    updateOrders() {
-        this.dataMap.clear();
+    init() {
         let exsitTimes = {};
         for(let i = 0 ; i < 9 ; i++ ) {
             for(let j = 0 ; j < 9; j ++) {
@@ -56,19 +55,16 @@ class Sudoku {
                 x: parseInt(key.split('-')[0]),
                 y: parseInt(key.split('-')[1]),
                 value: value.sort((a, b) => {
-                    exsitTimes[a] - exsitTimes[b] >= 0 ? -1:1;
+                    exsitTimes[a] - exsitTimes[b] > 0 ? 1:-1;
                 })
             })
         }
-        // //
+        // 
         // data.sort(function(a , b) {
         //     return a.value.length >= b.value.length ? 1 : -1;
         // })
 
         this.orders = data;
-
-        console.log(this.orders);
-        // process.exit();
 
     }
 
@@ -128,27 +124,37 @@ class Sudoku {
      * 找到这个方格的坐标返回
      */
     getNextPoint() {
-        let stacksLen = this.stacks.length;
+        let currentStack = this.stacks[this.stacks.length - 1];
         let ret = {
             x: -1,
             y: -1,
             value: 1,
         }
+        for(let i = 0, len=this.orders.length ; i < len ; i++) {
+            let cvalue = this.orders[i];
 
-        let nextValue = this.orders[stacksLen+1];
+            if(cvalue.x === currentStack.x
+                && cvalue.y === currentStack.y
+            ) {
+                let nextValue = this.orders[i+1];
+                if(!nextValue) {
+                    this.resolved = true;
+                    return ret;
+                    break;
+                }
+                ret.x = nextValue.x;
+                ret.y = nextValue.y;
+                ret.value = nextValue.value[0];
+                break;
+            }
+        }
 
-        if(!nextValue) {
+        if (ret.x === -1 && ret.y === -1) {
             this.resolved = true;
-            return ret;
-            // break;
-        }
+            process.exit();
 
-        ret = {
-            x: nextValue.x,
-            y: nextValue.y,
-            value: nextValue.value[0],
         }
-
+        // console.log('next value', ret);
         return ret;
     }
 
@@ -171,22 +177,24 @@ class Sudoku {
      * 开始执行
      */
     start() {
-        console.time('calc:time');
+        let s = new Date();
 
+        // 清空命令行
         let {
             resolved: resolved,
             stacks: stacks
         } = this;
         if(this.display) {
-            // 清空命令行
             process.stdout.cursorTo(0, 0);
             process.stdout.clearScreenDown();
         }
 
         while (resolved === false) {
+        //setInterval(() => {
+
+
             // 如果记录填写数字的历史表为空，直接找第一个可以填写的方格填入
             if (stacks.length === 0) {
-                console.log('stacks is zero');
                 stacks.push(this.getFirstPoint());
             }
 
@@ -194,8 +202,9 @@ class Sudoku {
 
             if (this.display) {
                 process.stdout.cursorTo(0,0);
-                console.timeEnd('calc:time');
                 console.log(this.sudokuMap);
+                console.log('已经填入数量',stacks.length);
+                console.log(`当前耗时${new Date()-s}ms`);
             }
 
             /**
@@ -206,11 +215,9 @@ class Sudoku {
             if (cStack.x === -1 && cStack.y === -1) {
                 resolved = true;
                 // console.log(this.sudokuMap);
-                console.timeEnd('calc:time');
-                let cStack = stacks[stacks.length - 2];
-                this.sudokuMap[cStack.x][cStack.y] = cStack.value;
                 console.log(this.sudokuMap);
-                process.exit();
+                console.log('已经填入数量',stacks.length);
+                console.log(`当前耗时${new Date()-s}ms`);
                 return this;
             }
 
@@ -224,6 +231,8 @@ class Sudoku {
                  */
                 this.sudokuMap[cStack.x][cStack.y] = cStack.value;
                 stacks.push(this.getNextPoint());
+
+
             } else {
                 /**
                  * 如果校验不通过
@@ -237,8 +246,10 @@ class Sudoku {
                  */
                 //this.sudokuMap[cStack.x][cStack.y] = 0;
                 // console.log(stacks);
+
                 this.rollback();
             }
+        // }, 1000)
         };
     }
 
@@ -254,27 +265,41 @@ class Sudoku {
      */
     rollback() {
 
-
-
         let {
             stacks, dataMap
         } = this;
 
         let currentStack = stacks.pop();
+        // let currentStack = stacks[stacks.length - 1];
+
 
         this.sudokuMap[currentStack.x][currentStack.y] = 0;
-        // this.updateOrders();
-        let cnode = dataMap.get(`${currentStack.x}-${currentStack.y}`);
+        let needRollbackDirect = false;
+        for(let i = 0,len=this.orders.length ; i < len ; i++) {
+            let cOrder = this.orders[i];
+            if(cOrder.x === currentStack.x && cOrder.y === currentStack.y) {
+                let orderIndex = cOrder.value.indexOf(currentStack.value);
+                if(orderIndex < 0) {
+                    console.log('查找完成');
+                    process.exit();
+                }
+                let cValue = cOrder.value[orderIndex+1];
+                if(orderIndex === cOrder.value.length-1) {
+                    needRollbackDirect = true;
+                    break;
+                }else{
 
-        let index = cnode.indexOf(currentStack.value);
-        if(index === cnode.length - 1) {
-            this.rollback();
-        }else{
-            stacks.push({
-                x: currentStack.x,
-                y: currentStack.y,
-                value: cnode[index+1],
-            });
+                    stacks.push({
+                        x: currentStack.x,
+                        y: currentStack.y,
+                        value: cValue,
+                    });
+                }
+                break;
+            }
+        }
+        if(needRollbackDirect) {
+            this.rollback()
         }
     }
 
@@ -297,6 +322,9 @@ class Sudoku {
                 continue;
             }
             let node = this.sudokuMap[i][y];
+            if (node === 0) {
+                continue;
+            }
             if (node === val) {
                 ret = false;
                 break;
@@ -306,12 +334,16 @@ class Sudoku {
         if (ret === false) {
             return ret;
         }
+
         // 纵向查找
         for (let i = 0; i < 9; i++) {
             if (i === y) {
                 continue;
             }
             let node = this.sudokuMap[x][i];
+            if (node === 0) {
+                continue;
+            }
             if (node === val) {
                 ret = false;
                 break;
@@ -340,6 +372,9 @@ class Sudoku {
                     }
 
                     let node = this.sudokuMap[i][j];
+                    if (node === 0) {
+                        continue;
+                    }
                     // console.log(i,j, node);
                     if (node === val) {
                         found = true;
@@ -349,17 +384,6 @@ class Sudoku {
                 }
             }
         }
-
-        // 检查this.orders里面是否有空值
-        for(let i = 0, len = this.orders.length ; i < len ; i++){
-            let item = this.orders[i];
-            if(item.value.length === 0) {
-                console.log('return false');
-                return false;
-                break;
-            }
-        }
-        // this.updateOrders();
         return ret;
     }
 
