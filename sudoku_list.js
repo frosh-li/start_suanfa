@@ -88,7 +88,7 @@ console.log(`test ${times} times!`);
 
 //迭代函数,传入9*9数组和待计算位置列表
 function testArray(fatherArray, fatherList){
-    times++;
+
     if (fatherList.length===0){
         //如果待计算位置长度为零，说明已经都找到,迭代结束，返回成功
         console.log('output:');
@@ -100,6 +100,7 @@ function testArray(fatherArray, fatherList){
 
     //取位置概率最小的位置进行测试
     for(let testValue of minPoint.set.values()){
+        times++;
         let childArray = cloneTwoDimArray(fatherArray);
         let childList = getChildPointsList(fatherList, minPoint, testValue);
         childArray[minPoint.x][minPoint.y] = testValue;
@@ -117,6 +118,7 @@ function testArray(fatherArray, fatherList){
 function getNullSet(listSet){
     var allSet = new Set([1,2,3,4,5,6,7,8,9]);
     for(let value of listSet.values()){
+        times++;
         if (allSet.has(value)) {
             allSet.delete(value);
         }
@@ -131,11 +133,13 @@ function getXYNumbers(x,y,array){
     //取列已出现数字set
     for(i=0;i<9;i++){
         numbers.add(array[x][i]);
+        times++;
     }
 
-    //取行亿出现数字set  
+    //取行亿出现数字set
     for(i=0;i<9;i++){
         numbers.add(array[i][y]);
+        times++;
     }
 
     //取9格内出现过的数字set
@@ -144,6 +148,7 @@ function getXYNumbers(x,y,array){
     yTimes=Math.floor((y)/3);
     for(i=0;i<3;i++){
         for(j=0;j<3;j++){
+            times++;
             numbers.add(array[xTimes*3 + i][yTimes*3 + j]);
         }
     }
@@ -154,25 +159,29 @@ function getXYNumbers(x,y,array){
 
 //取出矩阵中概率最小的点（不包括已经确定值的点）
 function getMinPoint(list){
+
     let minX = 0;
     let minSetSize = 10;
-    for(i=0;i<list.length;i++){
-            if(list[i].set.size < minSetSize){
-                minSetSize = list[i].set.size;
-                minX = i;
-            }
-            }
+    for(i=0,len=list.length;i<len;i++){
+        times++;
+        if(list[i].set.size < minSetSize){
+            minSetSize = list[i].set.size;
+            minX = i;
+        }
+    }
     let point = new Point(list[minX].value, list[minX].x, list[minX].y);
     point.set = new Set(list[minX].set.values());
+
     return point;
 }
 
 
 //数组转成point数组
 function arrayToPointsList(array){
-    let list = new Array(); 
+    let list = new Array();
     for (x=0;x<9;x++){
         for (y=0;y<9;y++){
+            times++;
             let point = new Point(array[x][y], x, y);
             if(point.value===0){
                 let numbers = getXYNumbers(x,y,array); //当前位置行列上出现过的数字
@@ -180,13 +189,15 @@ function arrayToPointsList(array){
                 list.push(point);
             }
         }
-    }  
+    }
     return list;
 }
 //pointlist删除某个节点后的子list
 function getChildPointsList(list, deletedPoint, value){
+    console.time('getChildPointsList:point');
     let childList = new Array();
-    for (i=0;i<list.length;i++){
+    for (i=0,len = list.length;i<len;i++){
+        times++;
         //如果是被删除点，不复制，进入下个循环
         let oldPoint = list[i];
         if(oldPoint.x===deletedPoint.x && oldPoint.y===deletedPoint.y) {
@@ -200,23 +211,26 @@ function getChildPointsList(list, deletedPoint, value){
             point.set.delete(value);
         }
         //如果再同一3*3小矩阵内，删除测试值
+
         if(Math.floor(oldPoint.x/3)===Math.floor(deletedPoint.x/3) && Math.floor(oldPoint.y/3) === Math.floor(deletedPoint.y/3)) {
             point.set.delete(value);
         }
         childList.push(point);
     }
+
+    console.timeEnd('getChildPointsList:point');
     return childList;
 }
 
 //实现二维数组的复制
 function cloneTwoDimArray(array){
-    let newArray = new Array(9);
+    let newArray = [];
     for(i=0;i<9;i++){
-        newArray[i]= new Array(9);
+        newArray[i]= [];
         for(j=0;j<9;j++){
             newArray[i][j]= array[i][j];
+            times++;
         }
     }
     return newArray;
 }
-

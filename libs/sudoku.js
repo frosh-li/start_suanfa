@@ -26,10 +26,13 @@ class Sudoku {
         this.dataMap = new Map();
 
         this.init();
+
         this.testRuleTimes = {
             ok: 0,
             fail: 0,
         };
+
+        this.allTimes = 0; // 所有的循环次数统计
 
         this.currentOrder = 0 ;
     }
@@ -41,6 +44,7 @@ class Sudoku {
         let exsitTimes = {};
         for(let i = 0 ; i < 9 ; i++ ) {
             for(let j = 0 ; j < 9; j ++) {
+                this.allTimes++;
                 let node = this.sudokuMap[i][j];
                 if(node === 0) {
                     this.testMayFill(i, j);
@@ -56,6 +60,7 @@ class Sudoku {
 
         let data = [];
         for(let [key, value] of this.dataMap) {
+            this.allTimes++;
             data.push({
                 x: parseInt(key.split('-')[0]),
                 y: parseInt(key.split('-')[1]),
@@ -66,9 +71,9 @@ class Sudoku {
             })
         }
         //
-        data.sort(function(a , b) {
-            return a.value.length > b.value.length ? 1 : -1;
-        })
+        // data.sort(function(a , b) {
+        //     return a.value.length > b.value.length ? 1 : -1;
+        // })
         //
         // data.reverse();
 
@@ -84,6 +89,7 @@ class Sudoku {
 
         // 横向查找
         for (let i = 0; i < 9; i++) {
+            this.allTimes++;
             // if (i === x) {
             //     continue;
             // }
@@ -95,6 +101,7 @@ class Sudoku {
 
         // 纵向查找
         for (let i = 0; i < 9; i++) {
+            this.allTimes++;
             // if (i === y) {
             //     continue;
             // }
@@ -108,6 +115,7 @@ class Sudoku {
         // 3X3 方格查找
         for (let i = 0; i < 9; i++) {
             for (let j = 0; j < 9; j++) {
+                this.allTimes++;
                 if (
                     i >= Math.floor(x / 3) * 3
                     && i < (Math.floor(x / 3) * 3 + 3)
@@ -214,6 +222,7 @@ class Sudoku {
                 console.log('已经填入数量',stacks.length);
                 console.log(`当前耗时${new Date()-s}ms`);
                 console.log(this.testRuleTimes);
+                console.log('所有For循环次数',this.allTimes);
                 return this;
             }
 
@@ -313,6 +322,7 @@ class Sudoku {
             }
 
             for (let j = 0; j < 9; j++) {
+                this.allTimes++;
                 let node = this.sudokuMap[x][j];
                 if (node === val) {
                     ret = false;
