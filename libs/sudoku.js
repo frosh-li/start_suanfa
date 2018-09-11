@@ -26,7 +26,12 @@ class Sudoku {
         this.dataMap = new Map();
 
         this.init();
+        this.testRuleTimes = {
+            ok: 0,
+            fail: 0,
+        };
 
+        this.currentOrder = 0 ;
     }
 
     /**
@@ -54,15 +59,18 @@ class Sudoku {
             data.push({
                 x: parseInt(key.split('-')[0]),
                 y: parseInt(key.split('-')[1]),
-                value: value.sort((a, b) => {
-                    exsitTimes[a] - exsitTimes[b] > 0 ? 1:-1;
-                })
+                value: value,
+                // value: value.sort((a, b) => {
+                //     exsitTimes[a] - exsitTimes[b] > 0 ? 1:-1;
+                // })
             })
         }
-        // 
+        //
         // data.sort(function(a , b) {
-        //     return a.value.length >= b.value.length ? 1 : -1;
+        //     return a.value.length > b.value.length ? 1 : -1;
         // })
+        //
+        // data.reverse();
 
         this.orders = data;
 
@@ -76,9 +84,9 @@ class Sudoku {
 
         // 横向查找
         for (let i = 0; i < 9; i++) {
-            if (i === x) {
-                continue;
-            }
+            // if (i === x) {
+            //     continue;
+            // }
             let node = this.sudokuMap[i][y];
             if (mayFillNumber.has(node)) {
                 mayFillNumber.delete(node);
@@ -87,9 +95,9 @@ class Sudoku {
 
         // 纵向查找
         for (let i = 0; i < 9; i++) {
-            if (i === y) {
-                continue;
-            }
+            // if (i === y) {
+            //     continue;
+            // }
             let node = this.sudokuMap[x][i];
 
             if (mayFillNumber.has(node)) {
@@ -130,31 +138,19 @@ class Sudoku {
             y: -1,
             value: 1,
         }
-        for(let i = 0, len=this.orders.length ; i < len ; i++) {
-            let cvalue = this.orders[i];
 
-            if(cvalue.x === currentStack.x
-                && cvalue.y === currentStack.y
-            ) {
-                let nextValue = this.orders[i+1];
-                if(!nextValue) {
-                    this.resolved = true;
-                    return ret;
-                    break;
-                }
-                ret.x = nextValue.x;
-                ret.y = nextValue.y;
-                ret.value = nextValue.value[0];
-                break;
-            }
-        }
+        this.currentOrder++;
 
-        if (ret.x === -1 && ret.y === -1) {
+        let nextValue = this.orders[this.currentOrder];
+        if(!nextValue) {
             this.resolved = true;
-            process.exit();
-
+            return ret;
+            // break;
         }
-        // console.log('next value', ret);
+        ret.x = nextValue.x;
+        ret.y = nextValue.y;
+        ret.value = nextValue.value[0];
+
         return ret;
     }
 
@@ -214,10 +210,10 @@ class Sudoku {
              */
             if (cStack.x === -1 && cStack.y === -1) {
                 resolved = true;
-                // console.log(this.sudokuMap);
                 console.log(this.sudokuMap);
                 console.log('已经填入数量',stacks.length);
                 console.log(`当前耗时${new Date()-s}ms`);
+                console.log(this.testRuleTimes);
                 return this;
             }
 
@@ -248,6 +244,7 @@ class Sudoku {
                 // console.log(stacks);
 
                 this.rollback();
+
             }
         // }, 1000)
         };
@@ -270,36 +267,19 @@ class Sudoku {
         } = this;
 
         let currentStack = stacks.pop();
-        // let currentStack = stacks[stacks.length - 1];
 
 
         this.sudokuMap[currentStack.x][currentStack.y] = 0;
-        let needRollbackDirect = false;
-        for(let i = 0,len=this.orders.length ; i < len ; i++) {
-            let cOrder = this.orders[i];
-            if(cOrder.x === currentStack.x && cOrder.y === currentStack.y) {
-                let orderIndex = cOrder.value.indexOf(currentStack.value);
-                if(orderIndex < 0) {
-                    console.log('查找完成');
-                    process.exit();
-                }
-                let cValue = cOrder.value[orderIndex+1];
-                if(orderIndex === cOrder.value.length-1) {
-                    needRollbackDirect = true;
-                    break;
-                }else{
 
-                    stacks.push({
-                        x: currentStack.x,
-                        y: currentStack.y,
-                        value: cValue,
-                    });
-                }
-                break;
-            }
-        }
-        if(needRollbackDirect) {
+        let cOrder = this.orders[this.currentOrder];
+
+        if(currentStack.value === cOrder.value[cOrder.value.length-1]) {
+            this.currentOrder--;
             this.rollback()
+        }else{
+            let orderIndex = cOrder.value.indexOf(currentStack.value);
+            currentStack.value = cOrder.value[orderIndex+1];
+            stacks.push(currentStack);
         }
     }
 
@@ -316,66 +296,38 @@ class Sudoku {
             value: val
         } = stack;
         let ret = true;
-        // 横向查找
-        for (let i = 0; i < 9; i++) {
-            if (i === x) {
-                continue;
-            }
-            let node = this.sudokuMap[i][y];
-            if (node === 0) {
-                continue;
-            }
-            if (node === val) {
-                ret = false;
-                break;
-            }
-        }
-
-        if (ret === false) {
-            return ret;
-        }
-
-        // 纵向查找
-        for (let i = 0; i < 9; i++) {
-            if (i === y) {
-                continue;
-            }
-            let node = this.sudokuMap[x][i];
-            if (node === 0) {
-                continue;
-            }
-            if (node === val) {
-                ret = false;
-                break;
-            }
-        }
-
-        if (ret === false) {
-            return ret;
-        }
 
         let found = false;
+
         for (let i = 0; i < 9; i++) {
             if (found) {
                 break;
+                return;
             }
+
+            let node = this.sudokuMap[i][y];
+            if (node === val) {
+                ret = false;
+                break;
+                return;
+            }
+
             for (let j = 0; j < 9; j++) {
+                let node = this.sudokuMap[x][j];
+                if (node === val) {
+                    ret = false;
+                    found = true;
+                    break;
+                    return;
+                }
+
                 if (
                     i >= Math.floor(x / 3) * 3
                     && i < (Math.floor(x / 3) * 3 + 3)
                     && j >= Math.floor(y / 3) * 3
                     && j < (Math.floor(y / 3) * 3 + 3)
                 ) {
-
-                    if (i === x && j === y) {
-                        continue;
-                    }
-
                     let node = this.sudokuMap[i][j];
-                    if (node === 0) {
-                        continue;
-                    }
-                    // console.log(i,j, node);
                     if (node === val) {
                         found = true;
                         ret = false;
@@ -384,6 +336,12 @@ class Sudoku {
                 }
             }
         }
+        if(ret) {
+            this.testRuleTimes.ok++;
+        }else{
+            this.testRuleTimes.fail++;
+        }
+
         return ret;
     }
 
