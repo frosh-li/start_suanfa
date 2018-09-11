@@ -66,9 +66,9 @@ class Sudoku {
             })
         }
         //
-        // data.sort(function(a , b) {
-        //     return a.value.length > b.value.length ? 1 : -1;
-        // })
+        data.sort(function(a , b) {
+            return a.value.length > b.value.length ? 1 : -1;
+        })
         //
         // data.reverse();
 
