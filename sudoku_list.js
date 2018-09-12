@@ -1,3 +1,4 @@
+const util = require('util');
 class Point {
     constructor(value, x, y) {
       this.value = value;  //当前取值
@@ -169,8 +170,12 @@ function getMinPoint(list){
             minX = i;
         }
     }
-    let point = new Point(list[minX].value, list[minX].x, list[minX].y);
-    point.set = new Set(list[minX].set.values());
+    let point = {
+        value: list[minX].value,
+        x: list[minX].x,
+        y:list[minX].y,
+        set: new Set(list[minX].set.values())
+    }
 
     return point;
 }
@@ -178,11 +183,15 @@ function getMinPoint(list){
 
 //数组转成point数组
 function arrayToPointsList(array){
-    let list = new Array();
+    let list = [];
     for (x=0;x<9;x++){
         for (y=0;y<9;y++){
             times++;
-            let point = new Point(array[x][y], x, y);
+            let point = {
+                value: array[x][y],
+                x: x,
+                y: y
+            }
             if(point.value===0){
                 let numbers = getXYNumbers(x,y,array); //当前位置行列上出现过的数字
                 point.set = getNullSet(numbers); //当前位置行列上没有出现过的数字
@@ -194,28 +203,40 @@ function arrayToPointsList(array){
 }
 //pointlist删除某个节点后的子list
 function getChildPointsList(list, deletedPoint, value){
+
+    // console.log(list, deletedPoint, value);
     console.time('getChildPointsList:point');
-    let childList = new Array();
-    for (i=0,len = list.length;i<len;i++){
+    let childList = [...list];
+    // util._extend(childList, list);
+    console.log(childList);
+    // console.log(list, deletedPoint);
+    for (i=0,len = childList.length;i<len;i++){
+        let oldPoint = childList[i];
+        if(oldPoint.x===deletedPoint.x && oldPoint.y===deletedPoint.y) {
+            childList.splice(i, 1);
+            break;
+        }
+    }
+
+    for (i=0,len = childList.length;i<len;i++){
+
         times++;
         //如果是被删除点，不复制，进入下个循环
-        let oldPoint = list[i];
-        if(oldPoint.x===deletedPoint.x && oldPoint.y===deletedPoint.y) {
-            continue;
-        }
-        //进行节点复制
-        let point = new Point(oldPoint.value, oldPoint.x, oldPoint.y);
-        point.set = new Set(oldPoint.set.values());
-        //如果是同一行或同一列，删除测试值
+        let oldPoint = childList[i];
+
+
+        let set = oldPoint.set;
+
         if(oldPoint.x===deletedPoint.x || oldPoint.y===deletedPoint.y) {
-            point.set.delete(value);
+            oldPoint.set.delete(value);
         }
         //如果再同一3*3小矩阵内，删除测试值
 
         if(Math.floor(oldPoint.x/3)===Math.floor(deletedPoint.x/3) && Math.floor(oldPoint.y/3) === Math.floor(deletedPoint.y/3)) {
-            point.set.delete(value);
+            oldPoint.set.delete(value);
         }
-        childList.push(point);
+
+
     }
 
     console.timeEnd('getChildPointsList:point');

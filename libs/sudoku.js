@@ -22,18 +22,15 @@ class Sudoku {
         // 是否已经解答完成
         this.resolved = false;
 
-
+        this.allTimes = 0; // 所有的循环次数统计
         this.dataMap = new Map();
-
+        console.time('init:time');
         this.init();
-
+        console.timeEnd('init:time');
         this.testRuleTimes = {
             ok: 0,
             fail: 0,
         };
-
-        this.allTimes = 0; // 所有的循环次数统计
-
         this.currentOrder = 0 ;
     }
 
@@ -90,9 +87,6 @@ class Sudoku {
         // 横向查找
         for (let i = 0; i < 9; i++) {
             this.allTimes++;
-            // if (i === x) {
-            //     continue;
-            // }
             let node = this.sudokuMap[i][y];
             if (mayFillNumber.has(node)) {
                 mayFillNumber.delete(node);
@@ -102,9 +96,6 @@ class Sudoku {
         // 纵向查找
         for (let i = 0; i < 9; i++) {
             this.allTimes++;
-            // if (i === y) {
-            //     continue;
-            // }
             let node = this.sudokuMap[x][i];
 
             if (mayFillNumber.has(node)) {
@@ -113,22 +104,43 @@ class Sudoku {
         }
 
         // 3X3 方格查找
-        for (let i = 0; i < 9; i++) {
-            for (let j = 0; j < 9; j++) {
+        // for (let i = 0; i < 9; i++) {
+        //     for (let j = 0; j < 9; j++) {
+        //         this.allTimes++;
+        //         if (
+        //             i >= Math.floor(x / 3) * 3
+        //             && i < (Math.floor(x / 3) * 3 + 3)
+        //             && j >= Math.floor(y / 3) * 3
+        //             && j < (Math.floor(y / 3) * 3 + 3)
+        //         ) {
+        //             let node = this.sudokuMap[i][j];
+        //             if (mayFillNumber.has(node)) {
+        //                 mayFillNumber.delete(node);
+        //             }
+        //         }
+        //     }
+        // }
+
+        /* x为n所在的小九宫格左顶点竖坐标 */
+        let startX = Math.floor(x / 3) * 3;
+
+        /* y为n所在的小九宫格左顶点横坐标 */
+        let startY  = Math.floor(y / 3) * 3;
+
+
+        /* 判断n所在的小九宫格是否合法 */
+        for (let i = startX; i < startX + 3; i++)
+        {
+            for (let j = startY; j < startY + 3; j++)
+            {
                 this.allTimes++;
-                if (
-                    i >= Math.floor(x / 3) * 3
-                    && i < (Math.floor(x / 3) * 3 + 3)
-                    && j >= Math.floor(y / 3) * 3
-                    && j < (Math.floor(y / 3) * 3 + 3)
-                ) {
-                    let node = this.sudokuMap[i][j];
-                    if (mayFillNumber.has(node)) {
-                        mayFillNumber.delete(node);
-                    }
+                let node = this.sudokuMap[i][j];
+                if (mayFillNumber.has(node)) {
+                    mayFillNumber.delete(node);
                 }
             }
         }
+
 
         this.dataMap.set(`${x}-${y}`, [...mayFillNumber]);
     }
@@ -193,15 +205,10 @@ class Sudoku {
             process.stdout.clearScreenDown();
         }
 
+        // 如果记录填写数字的历史表为空，直接找第一个可以填写的方格填入
+        //
+        stacks.push(this.getFirstPoint());
         while (resolved === false) {
-        //setInterval(() => {
-
-
-            // 如果记录填写数字的历史表为空，直接找第一个可以填写的方格填入
-            if (stacks.length === 0) {
-                stacks.push(this.getFirstPoint());
-            }
-
             let cStack = stacks[stacks.length - 1];
 
             if (this.display) {
@@ -236,8 +243,6 @@ class Sudoku {
                  */
                 this.sudokuMap[cStack.x][cStack.y] = cStack.value;
                 stacks.push(this.getNextPoint());
-
-
             } else {
                 /**
                  * 如果校验不通过
@@ -251,11 +256,8 @@ class Sudoku {
                  */
                 //this.sudokuMap[cStack.x][cStack.y] = 0;
                 // console.log(stacks);
-
                 this.rollback();
-
             }
-        // }, 1000)
         };
     }
 
@@ -307,45 +309,46 @@ class Sudoku {
         let ret = true;
 
         let found = false;
-
-        for (let i = 0; i < 9; i++) {
-            if (found) {
-                break;
-                return;
-            }
-
+        for(let i = 0 ; i < 9 ; i++) {
+            this.allTimes++;
             let node = this.sudokuMap[i][y];
             if (node === val) {
-                ret = false;
-                break;
-                return;
+                this.testRuleTimes.fail++;
+                return false;
             }
+        }
 
-            for (let j = 0; j < 9; j++) {
+        for(let j = 0 ; j < 9 ; j++) {
+            this.allTimes++;
+            let node = this.sudokuMap[x][j];
+            if (node === val) {
+                this.testRuleTimes.fail++;
+                return false;
+            }
+        }
+
+
+        /* x为n所在的小九宫格左顶点竖坐标 */
+        let startX = Math.floor(x / 3) * 3;
+
+        /* y为n所在的小九宫格左顶点横坐标 */
+        let startY  = Math.floor(y / 3) * 3;
+
+
+        /* 判断n所在的小九宫格是否合法 */
+        for (let i = startX; i < startX + 3; i++)
+        {
+            for (let j = startY; j < startY + 3; j++)
+            {
                 this.allTimes++;
-                let node = this.sudokuMap[x][j];
+                let node = this.sudokuMap[i][j];
                 if (node === val) {
-                    ret = false;
-                    found = true;
-                    break;
-                    return;
-                }
-
-                if (
-                    i >= Math.floor(x / 3) * 3
-                    && i < (Math.floor(x / 3) * 3 + 3)
-                    && j >= Math.floor(y / 3) * 3
-                    && j < (Math.floor(y / 3) * 3 + 3)
-                ) {
-                    let node = this.sudokuMap[i][j];
-                    if (node === val) {
-                        found = true;
-                        ret = false;
-                        break;
-                    }
+                    this.testRuleTimes.fail++;
+                    return false;
                 }
             }
         }
+
         if(ret) {
             this.testRuleTimes.ok++;
         }else{
