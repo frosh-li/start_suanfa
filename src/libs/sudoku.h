@@ -10,14 +10,15 @@
 #include <queue>
 #include <string>
 
-class PointValue {
-    public:
-        PointValue();
-        PointValue(int x, int y, int value);
-    public:
-        int x;
-        int y;
-        int value;
+struct SuDokuPoint {
+    int x;
+    int y;
+};
+
+struct SuDokuPointValue {
+    int x;
+    int y;
+    int value;
 };
 
 class SudoKu {
@@ -28,15 +29,15 @@ class SudoKu {
     private:
         void init();
         void testMayFill(int x, int y);
-        PointValue getNextPointValue();
-        PointValue getFirstPointValue();
+        SuDokuPointValue getNextPointValue();
+        SuDokuPointValue getFirstPointValue();
         void rollBack();
-        bool testRules(const PointValue & stack);
+        bool testRules(const SuDokuPointValue & stack);
     private:
         bool isDisplay;
         int sudokuMap[9][9];
         bool isResolved;
-        std::map<int, std::queue<int> *> dataMap;
+        std::map<SuDokuPoint, std::queue<int> *> dataMap;
         int testRuleTimesOk;
         int testRuleTimesFail;
         int allTimes;

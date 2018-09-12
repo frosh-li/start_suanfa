@@ -2,12 +2,10 @@
 // Created by flavor on 2018/9/12.
 //
 #include <iostream>
+#include <MacTypes.h>
 #include "sudoku.h"
 
 using namespace std;
-
-PointValue::PointValue(): x(0), y(0), value(0) {}
-PointValue::PointValue(int i, int j, int v): x(i), y(j), value(v) {}
 
 SudoKu::SudoKu(bool display, const int map[9][9]):
     isDisplay(display),
@@ -92,23 +90,27 @@ void SudoKu::testMayFill(int x, int y) {
         }
     }
 
+    SuDokuPoint point;
+    point.x = x;
+    point.y = y;
+
     if (!ptrFillNumber->empty()) {
-        dataMap[x * 10 + y] = ptrFillNumber;
+        dataMap[point] = ptrFillNumber;
     }
 }
 
 void SudoKu::start() {
 }
 
-PointValue SudoKu::getFirstPointValue() {
-    return PointValue();
+SuDokuPointValue SudoKu::getFirstPointValue() {
+    return SuDokuPointValue();
 }
 
-PointValue SudoKu::getNextPointValue() {
-    return PointValue();
+SuDokuPointValue SudoKu::getNextPointValue() {
+    return SuDokuPointValue();
 }
 
-bool SudoKu::testRules(const PointValue & stack) {
+bool SudoKu::testRules(const SuDokuPointValue & stack) {
     return false;
 }
 
