@@ -3,10 +3,10 @@
 //
 #include "sudoku.h"
 
-int* mayFillNumber(int x, int y, int data[][9]) {
-    int row, col, r;
+int may_fill_number(int x, int y, int data[][9], int * out) {
     int node = data[x][y];
     if (0 == node) {
+        int row, col, r;
         int testNumber[9] = {0};
         // 横向和纵向搜索，排除掉已有的数字
         for (int i = 0; i < 9; i++) {
@@ -42,13 +42,50 @@ int* mayFillNumber(int x, int y, int data[][9]) {
         }
 
         // 该位置可填写的数字
+        int result = 0;
         for (int i = 0; i < 9; i++) {
             if (testNumber[i] == 0) {
-                printf("x = %d, y = %d, v = %d\n", x, y, i + 1);
+                out[result] = i + 1;
+                result++;
+            }
+        }
+
+        return result;
+    }
+
+
+    return 0;
+}
+
+int test_number(int x, int y, int number, int data[][9]) {
+    for (int i = 0; i < 9; i++) {
+        if (i != x) {
+            if (data[i][y] == number) {
+                return 1;
+            }
+        }
+
+        if (i != y) {
+            if (data[x][i] == number) {
+                return 1;
             }
         }
     }
 
+    // 3X3 搜索，排除掉已有的数字
+    int row = x / 3 * 3;
+    int col = y / 3 * 3;
+    int r;
+    for (int i = 0; i < 3; i++) {
+        r = i + row;
+        for (int j = 0; j < 3; j++) {
+            if (!((r == x) && (y == col + j))) {
+                if (data[r][col + j] == number) {
+                    return 1;
+                }
+            }
+        }
+    }
 
-    return NULL;
+    return 0;
 }
