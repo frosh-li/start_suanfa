@@ -20,7 +20,7 @@ int* mayFillNumber(int x, int y, int data[][9]) {
             if (i != y) {
                 col = data[x][i];
                 if (col > 0) {
-                    testNumber[row - 1] = 1;
+                    testNumber[col - 1] = 1;
                 }
             }
         }
@@ -43,7 +43,7 @@ int* mayFillNumber(int x, int y, int data[][9]) {
 
         // 该位置可填写的数字
         for (int i = 0; i < 9; i++) {
-            if (testNumber[i] == 1) {
+            if (testNumber[i] == 0) {
                 printf("x = %d, y = %d, v = %d\n", x, y, i + 1);
             }
         }
