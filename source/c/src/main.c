@@ -32,10 +32,25 @@ static int mayFillNumberMap[9][9][9] = {0};
 /**
  * 可填写位置队列
  */
-struct point dataCountQueue[81] = {{0,0,0}};
+static struct point dataCountQueue[81] = {{0,0,0}};
+
+/**
+ * 每行的和
+ */
+static int sumRow[9] = {0};
+
+/**
+ * 每列的和
+ */
+static int sumCol[9] = {0};
+
+/**
+ * 每个正方形矩阵的和
+ */
+static int sumSquare[9] = {0};
 
 int main() {
-    int count;
+    int count, node;
     int queueLength = 0;
     for (int x = 0; x < 9; x++) {
         for (int y = 0; y < 9; y++) {
@@ -47,6 +62,11 @@ int main() {
                 dataCountQueue[queueLength].count = count;
                 queueLength++;
             }
+
+            node = dataMap[x][y];
+            sumRow[x] += node;
+            sumCol[y] += node;
+            sumSquare[x / 3 * 3 + y / 3] += node;
         }
     }
 

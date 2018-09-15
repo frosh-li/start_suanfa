@@ -8,6 +8,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+/**
+ * 每行/每列/每个正方形的和不能超过45
+ */
+#define SUM_MAX 45
+
+
+/**
+ * 每个位置可填写数量结构体
+ */
 struct point {
     int x;
     int y;
