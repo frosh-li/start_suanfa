@@ -3,7 +3,11 @@
 //
 #include "sudoku.h"
 
-int may_fill_number(int x, int y, int data[][9], int * out) {
+int square_index(int x, int y) {
+    return x / 3 * 3 + y / 3;
+}
+
+int may_fill_number(int x, int y, const int data[][9], int * out) {
     int node = data[x][y];
     if (0 == node) {
         int row, col, r;
@@ -57,7 +61,19 @@ int may_fill_number(int x, int y, int data[][9], int * out) {
     return 0;
 }
 
-int test_number(int x, int y, int number, int data[][9]) {
+int test_number(int x, int y, int number, const int data[][9], const int * sumRow, const int * sumColumn, const int * sumSquare) {
+    if (sumRow[x] + number > SUM_MAX) {
+        return 1;
+    }
+
+    if (sumColumn[y] + number > SUM_MAX) {
+        return 1;
+    }
+
+    if (sumSquare[x / 3 * 3 + y / 3] + number > SUM_MAX) {
+        return 1;
+    }
+
     for (int i = 0; i < 9; i++) {
         if (i != x) {
             if (data[i][y] == number) {
@@ -88,4 +104,18 @@ int test_number(int x, int y, int number, int data[][9]) {
     }
 
     return 0;
+}
+
+void fill_number(int x, int y, int number, int data[][9], int * sumRow, int * sumColumn, int * sumSquare) {
+    data[x][y] = number;
+    sumRow[x] += number;
+    sumColumn[y] += number;
+    sumSquare[square_index(x, y)] += number;
+}
+
+void roll_back(int x, int y, int number, int data[][9], int * sumRow, int * sumColumn, int * sumSquare) {
+    data[x][y] = 0;
+    sumRow[x] -= number;
+    sumColumn[y] -= number;
+    sumSquare[square_index(x, y)] -= number;
 }

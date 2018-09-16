@@ -32,7 +32,7 @@ static int mayFillNumberMap[9][9][9] = {0};
 /**
  * 可填写位置队列
  */
-static struct point dataCountQueue[81] = {{0,0,0}};
+static struct point dataCountQueue[81] = {{0, 0, 0, 0}};
 
 /**
  * 每行的和
@@ -42,7 +42,7 @@ static int sumRow[9] = {0};
 /**
  * 每列的和
  */
-static int sumCol[9] = {0};
+static int sumColumn[9] = {0};
 
 /**
  * 每个正方形矩阵的和
@@ -52,6 +52,8 @@ static int sumSquare[9] = {0};
 int main() {
     int count, node;
     int queueLength = 0;
+
+    // 遍历初始待解题数组,找出每个空可填写的数字,
     for (int x = 0; x < 9; x++) {
         for (int y = 0; y < 9; y++) {
             count = may_fill_number(x, y, dataMap, mayFillNumberMap[x][y]);
@@ -65,8 +67,37 @@ int main() {
 
             node = dataMap[x][y];
             sumRow[x] += node;
-            sumCol[y] += node;
-            sumSquare[x / 3 * 3 + y / 3] += node;
+            sumColumn[y] += node;
+            sumSquare[square_index(x, y)] += node;
+        }
+    }
+
+    // 解题
+    struct point *ptrPoint = NULL;
+    int * fillNumber = NULL;
+    int index = 0;
+    int x,y;
+    for (;;) {
+        ptrPoint = &dataCountQueue[index];
+        x = ptrPoint->x;
+        y = ptrPoint->y;
+        fillNumber = mayFillNumberMap[x][y];
+
+        int isSuccess = -1;
+        for (int j = ptrPoint->index; j < ptrPoint->count; j++) {
+            if (0 == test_number(x, y, fillNumber[j], dataMap, sumRow, sumColumn, sumSquare)) {
+                fill_number(x, y, fillNumber[j], dataMap, sumRow, sumColumn, sumSquare);
+                isSuccess = 0;
+            }
+        }
+
+        if (0 != isSuccess) {
+        } else {
+            index++;
+        }
+
+        if (index >= queueLength) {
+            break;
         }
     }
 
