@@ -4,6 +4,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <sys/time.h>
 #include "libs/sudoku.h"
 
 /**
@@ -49,14 +51,14 @@ static int sumColumn[9] = {0};
  */
 static int sumSquare[9] = {0};
 
+static struct timeval startTime, endTime;
 int main() {
-    int count, node;
     int queueLength = 0;
-
+    gettimeofday(&startTime, NULL);
     // 遍历初始待解题数组,找出每个空可填写的数字,
     for (int x = 0; x < 9; x++) {
         for (int y = 0; y < 9; y++) {
-            count = may_fill_number(x, y, dataMap, mayFillNumberMap[x][y]);
+            int count = may_fill_number(x, y, dataMap, mayFillNumberMap[x][y]);
             mayFillCountMap[x][y] = count;
             if (count > 0) {
                 dataCountQueue[queueLength].x = x;
@@ -65,7 +67,7 @@ int main() {
                 queueLength++;
             }
 
-            node = dataMap[x][y];
+            int node = dataMap[x][y];
             sumRow[x] += node;
             sumColumn[y] += node;
             sumSquare[square_index(x, y)] += node;
@@ -73,32 +75,61 @@ int main() {
     }
 
     // 解题
-    struct point *ptrPoint = NULL;
-    int * fillNumber = NULL;
     int index = 0;
-    int x,y;
+    int isResolved = -1;
     for (;;) {
-        ptrPoint = &dataCountQueue[index];
-        x = ptrPoint->x;
-        y = ptrPoint->y;
-        fillNumber = mayFillNumberMap[x][y];
+        struct point * ptrPoint = &dataCountQueue[index];
+        int x = ptrPoint->x;
+        int y = ptrPoint->y;
+        int * fillNumber = mayFillNumberMap[x][y];
 
         int isSuccess = -1;
-        for (int j = ptrPoint->index; j < ptrPoint->count; j++) {
-            if (0 == test_number(x, y, fillNumber[j], dataMap, sumRow, sumColumn, sumSquare)) {
-                fill_number(x, y, fillNumber[j], dataMap, sumRow, sumColumn, sumSquare);
+        for (; ptrPoint->index < ptrPoint->count; ptrPoint->index++) {
+            // 成功填入则将指针指向下一个
+            if (0 == test_number(x, y, fillNumber[ptrPoint->index], dataMap, sumRow, sumColumn, sumSquare)) {
+                fill_number(x, y, fillNumber[ptrPoint->index], dataMap, sumRow, sumColumn, sumSquare);
                 isSuccess = 0;
+                ptrPoint->index++;
+                break;
             }
         }
 
         if (0 != isSuccess) {
+            ptrPoint->index = 0;
+            index--;
+            ptrPoint = &dataCountQueue[index];
+            x = ptrPoint->x;
+            y = ptrPoint->y;
+            fillNumber = mayFillNumberMap[x][y];
+            roll_back(x, y, fillNumber[ptrPoint->index - 1], dataMap, sumRow, sumColumn, sumSquare);
         } else {
             index++;
         }
 
         if (index >= queueLength) {
+            isResolved = 0;
             break;
         }
+
+        if (index < 0) {
+            break;
+        }
+    }
+
+    gettimeofday(&endTime, NULL);
+    long time = (endTime.tv_sec * 1000000  + endTime.tv_usec) - (startTime.tv_sec * 1000000 + startTime.tv_usec);
+    if (0 == isResolved) {
+        printf("已解题:\n");
+        printf("共耗时: %f s\n",  time * 1.0 / 1000000);
+        for (int x = 0; x < 9; x++) {
+            for (int y = 0; y < 9; y++) {
+                printf("%d ", dataMap[x][y]);
+            }
+            printf("\n");
+        }
+    } else {
+        printf("该题无解.\n");
+        printf("共耗时: %f s\n",  time * 1.0 / 1000000);
     }
 
     return 0;
