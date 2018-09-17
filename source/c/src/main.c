@@ -64,6 +64,11 @@ static int sumColumn[9] = {0};
 static int sumSquare[9] = {0};
 
 static struct timeval startTime, endTime;
+/**
+ * 迭代次数
+ */
+static int times = 0;
+
 int main() {
     int queueLength = 0;
     gettimeofday(&startTime, NULL);
@@ -97,6 +102,7 @@ int main() {
 
         int isSuccess = -1;
         for (; ptrPoint->index < ptrPoint->count; ptrPoint->index++) {
+            times++;
             // 成功填入则将指针指向下一个
             if (0 == test_number(x, y, fillNumber[ptrPoint->index], dataMap, sumRow, sumColumn, sumSquare)) {
                 fill_number(x, y, fillNumber[ptrPoint->index], dataMap, sumRow, sumColumn, sumSquare);
@@ -132,6 +138,7 @@ int main() {
     long time = (endTime.tv_sec * 1000000  + endTime.tv_usec) - (startTime.tv_sec * 1000000 + startTime.tv_usec);
     if (0 == isResolved) {
         printf("已解题:\n");
+        printf("迭代次数:%d\n", times);
         printf("共耗时: %f s\n",  time * 1.0 / 1000000);
         for (int x = 0; x < 9; x++) {
             for (int y = 0; y < 9; y++) {
@@ -141,6 +148,7 @@ int main() {
         }
     } else {
         printf("该题无解.\n");
+        printf("迭代次数:%d\n", times);
         printf("共耗时: %f s\n",  time * 1.0 / 1000000);
     }
 
