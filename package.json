@@ -1,0 +1,19 @@
+{
+  "name": "start_suanfa",
+  "version": "1.0.0",
+  "description": "数独问题，使用回溯算法",
+  "main": "24.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frosh-li/start_suanfa.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/frosh-li/start_suanfa/issues"
+  },
+  "homepage": "https://github.com/frosh-li/start_suanfa#readme"
+}
