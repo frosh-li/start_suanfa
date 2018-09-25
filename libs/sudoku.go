@@ -6,24 +6,36 @@ import (
 	"time"
 )
 
+// 定义可填写位置数据
 type sArray struct {
 	x     int
 	y     int
 	elems []int
 }
 
-type Point struct {
+// 定义已经填入的点
+type point struct {
 	x     int
 	y     int
 	value int
 }
 
-var dataMap = [9][9]int{{8, 0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 3, 6, 0, 0, 0, 0, 0}, {0, 7, 0, 0, 9, 0, 2, 0, 0}, {0, 5, 0, 0, 0, 7, 0, 0, 0}, {0, 0, 0, 0, 4, 5, 7, 0, 0}, {0, 0, 0, 1, 0, 0, 0, 3, 0}, {0, 0, 1, 0, 0, 0, 0, 6, 8}, {0, 0, 8, 5, 0, 0, 0, 1, 0}, {0, 9, 0, 0, 0, 0, 4, 0, 0}}
+var dataMap = [9][9]int{
+	{8, 0, 0, 0, 0, 0, 0, 0, 0},
+	{0, 0, 3, 6, 0, 0, 0, 0, 0},
+	{0, 7, 0, 0, 9, 0, 2, 0, 0},
+	{0, 5, 0, 0, 0, 7, 0, 0, 0},
+	{0, 0, 0, 0, 4, 5, 7, 0, 0},
+	{0, 0, 0, 1, 0, 0, 0, 3, 0},
+	{0, 0, 1, 0, 0, 0, 0, 6, 8},
+	{0, 0, 8, 5, 0, 0, 0, 1, 0},
+	{0, 9, 0, 0, 0, 0, 4, 0, 0}}
+
 var cmap = make(map[string]sArray)
 
 var orders = []sArray{}
 
-var stacks = []Point{}
+var stacks = []point{}
 
 var currentOrder = 0
 
@@ -42,21 +54,21 @@ func initOrders() {
 	fmt.Println(orders)
 }
 
-func getFirstPoint() Point {
-	return Point{orders[0].x, orders[0].y, orders[0].elems[0]}
+func getFirstPoint() point {
+	return point{orders[0].x, orders[0].y, orders[0].elems[0]}
 }
 
-func getNextPoint() Point {
+func getNextPoint() point {
 
 	currentOrder++
 	if currentOrder >= len(orders) {
 		resolved = true
-		return Point{-1, -1, 1}
+		return point{-1, -1, 1}
 	}
 
 	nextValue := orders[currentOrder]
 
-	return Point{nextValue.x, nextValue.y, nextValue.elems[0]}
+	return point{nextValue.x, nextValue.y, nextValue.elems[0]}
 }
 
 func start() {
@@ -87,7 +99,7 @@ func start() {
 
 }
 
-func testRules(cStack Point) bool {
+func testRules(cStack point) bool {
 	ret := true
 	x := cStack.x
 	y := cStack.y
@@ -146,7 +158,7 @@ func rollback() {
 	}
 }
 
-func removePoint(slice []Point, index int) []Point {
+func removePoint(slice []point, index int) []point {
 	copy(slice[index:], slice[index+1:])
 	return slice[:len(slice)-1]
 }
